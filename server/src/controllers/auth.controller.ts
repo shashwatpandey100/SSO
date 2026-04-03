@@ -54,8 +54,8 @@ function setAuthCookies(res: Response, accessToken: string, refreshToken: string
 
   const sessionCookieOptions: any = {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: 'lax',
+    secure: true, // Required for sameSite 'none'
+    sameSite: 'none' as const, // Cross-origin: SSO frontend → SSO API are different origins
     maxAge: 60 * 60 * 1000, // 1 hour
     path: '/api/v1/oauth', // Only sent on OAuth routes
   };

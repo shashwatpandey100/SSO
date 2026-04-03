@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { clientApps, users } from './db/schema';
 import { hashPassword } from './utils/jwt';
@@ -20,7 +21,7 @@ async function seedTestUser() {
 
     // Check if user already exists
     const existing = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.email, testUser.email),
+      where: eq(users.email, testUser.email),
     });
 
     if (existing) {
@@ -105,7 +106,7 @@ async function seedClientApps() {
 
       // Check if client already exists
       const existing = await db.query.clientApps.findFirst({
-        where: (clientApps, { eq }) => eq(clientApps.clientId, client.clientId),
+        where: eq(clientApps.clientId, client.clientId),
       });
 
       if (existing) {
