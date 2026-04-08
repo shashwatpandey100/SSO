@@ -37,11 +37,14 @@ function getPasswordResetExpiry(): Date {
 
 function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
   const isProduction = process.env.NODE_ENV === 'production';
+  // vercel.app is on the Public Suffix List, so cross-subdomain requests are cross-site.
+  // SameSite=None + Secure is required for cookies to be stored/sent cross-site.
+  const sameSite: 'lax' | 'none' = isProduction ? 'none' : 'lax';
 
   res.cookie('access_token', accessToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite,
     maxAge: 60 * 60 * 1000, // 1 hour (matches JWT expiry)
     path: '/',
   });
@@ -49,7 +52,7 @@ function setAuthCookies(res: Response, accessToken: string, refreshToken: string
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite,
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     path: '/',
   });
@@ -57,7 +60,7 @@ function setAuthCookies(res: Response, accessToken: string, refreshToken: string
   const sessionCookieOptions: any = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite,
     maxAge: 60 * 60 * 1000, // 1 hour
     path: '/api/v1/oauth', // Only sent on OAuth routes
   };
@@ -68,9 +71,12 @@ function setAuthCookies(res: Response, accessToken: string, refreshToken: string
 }
 
 function clearAuthCookies(res: Response) {
-  res.clearCookie('access_token', { path: '/' });
-  res.clearCookie('refresh_token', { path: '/' });
-  const sessionClearOptions: any = { path: '/api/v1/oauth' };
+  const isProduction = process.env.NODE_ENV === 'production';
+  const sameSite: 'lax' | 'none' = isProduction ? 'none' : 'lax';
+
+  res.clearCookie('access_token', { path: '/', sameSite, secure: isProduction });
+  res.clearCookie('refresh_token', { path: '/', sameSite, secure: isProduction });
+  const sessionClearOptions: any = { path: '/api/v1/oauth', sameSite, secure: isProduction };
   if (process.env.COOKIE_DOMAIN) {
     sessionClearOptions.domain = process.env.COOKIE_DOMAIN;
   }
